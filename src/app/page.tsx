@@ -1,52 +1,102 @@
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
-export default function Home() {
-	return (
-		<div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-				<Image className="dark:invert" src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
-				<ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-					<li className="mb-2 tracking-[-.01em]">
-						Hi! Welcom to my home page!
-						<code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-							src/app/page.tsx
-						</code>
-						.
-					</li>
-					<li className="tracking-[-.01em]">Save and see your changes instantly.</li>
-				</ol>
+type EyeProps = {
+  x: number;
+  y: number;
+  size?: number;
+};
 
-				<div className="flex gap-4 items-center flex-col sm:flex-row">
-					<a
-						className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-						href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Read our docs
-					</a>
-				</div>
-			</main>
-			<footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/file.svg" alt="File icon" width={16} height={16} />
-					Learn
-				</a>
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
-					Go to nextjs.org →
-				</a>
-			</footer>
-		</div>
-	);
+const Eye = ({ x, y, size = 80 }: EyeProps) => {
+  const pupilRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      if (!pupilRef.current) return;
+
+      const rect = pupilRef.current.parentElement!.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const dx = e.clientX - centerX;
+      const dy = e.clientY - centerY;
+
+      const distance = Math.min(12, Math.sqrt(dx * dx + dy * dy));
+      const angle = Math.atan2(dy, dx);
+
+      const px = Math.cos(angle) * distance;
+      const py = Math.sin(angle) * distance;
+
+      pupilRef.current.style.transform = `translate(${px}px, ${py}px)`;
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "#fff",
+        border: "4px solid #eee",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        ref={pupilRef}
+        style={{
+          width: size * 0.3,
+          height: size * 0.3,
+          background: "#000",
+          borderRadius: "50%",
+          transition: "transform 0.1s ease-out",
+        }}
+      />
+    </div>
+  );
+};
+
+export default function EyeFollowPage() {
+  const eyes = [
+    { x: 200, y: 150 },
+    { x: 350, y: 220 },
+    { x: 260, y: 320 },
+    { x: 420, y: 140 },
+  ];
+
+  return (
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        background: "#faf7f2",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {eyes.map((eye, i) => (
+        <Eye key={i} x={eye.x} y={eye.y} />
+      ))}
+
+      <div
+        style={{
+          position: "fixed",
+          bottom: 20,
+          width: "100%",
+          textAlign: "center",
+          color: "#777",
+          fontSize: 14,
+        }}
+      >
+        👀 カーソルを動かしてね
+      </div>
+    </div>
+  );
 }
